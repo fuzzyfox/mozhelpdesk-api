@@ -140,8 +140,8 @@ ticketSchema.statics.mergeTweetsWithTickets = function(
 ) {
   return new Promise((resolve, reject) => {
     const tweetIds = new Set()
-    const isSingleTicket = !Array.isArray(tweets)
-    tweets = isSingleTicket ? [tweets] : tweets
+    const isSingleTweet = !Array.isArray(tweets)
+    tweets = isSingleTweet ? [tweets] : tweets
     tweets = tweets.map(tweet => (tweet.toObject ? tweet.toObject() : tweet))
 
     tweets.forEach(function traverse(tweet) {
@@ -161,12 +161,12 @@ ticketSchema.statics.mergeTweetsWithTickets = function(
     this.find({ twid: { $in: [...tweetIds] } }, (err, tickets) => {
       tickets = tickets || []
       tickets = tickets.map(
-        tweet => (tweet.toObject ? tweet.toObject() : tweet)
+        ticket => (ticket.toObject ? ticket.toObject() : ticket)
       )
 
       tweets = tweets.map(function traverse(tweet) {
         tweet = Object.assign(
-          tickets.find(known => known.twid === tweet.id_str) ||
+          tickets.find(ticket => ticket.twid === tweet.id_str) ||
             dumbyTicketObj(),
           tweet
         )
@@ -182,7 +182,7 @@ ticketSchema.statics.mergeTweetsWithTickets = function(
         return tweet
       })
 
-      if (isSingleTicket) {
+      if (isSingleTweet) {
         tweets = tweets[0]
       }
 

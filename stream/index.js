@@ -20,6 +20,7 @@ let twitterStreamReconnectTimeout = null
 
 module.exports = {
   io: null,
+  tweet: null,
   get twitterStream() {
     return twitterStream
   },

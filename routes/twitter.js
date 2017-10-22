@@ -90,9 +90,9 @@ router.get('/search/tweets', (req, res) => {
         ),
         Ticket.mergeTweetsWithTickets(result.statuses)
       ])
-        .then(([hydratedTweets, tickets]) => {
+        .then(([hydratedTweets, tweets]) => {
           if (hydratedTweets && hydratedTweets.length) {
-            result.statuses = tickets.map(function traverse(tweet) {
+            result.statuses = tweets.map(function traverse(tweet) {
               const hydratedTweet = hydratedTweets.find(
                 hydrated => hydrated.id_str === tweet.id_str
               )
@@ -101,15 +101,14 @@ router.get('/search/tweets', (req, res) => {
                 return tweet
               }
 
-              const origTweet = tweet
-              tweet = Object.assign({}, origTweet, hydratedTweet)
+              tweet = Object.assign({}, tweet, hydratedTweet)
 
               if (tweet.retweeted_status) {
-                tweet.retweeted_status = traverse(origTweet.retweeted_status)
+                tweet.retweeted_status = traverse(tweet.retweeted_status)
               }
 
               if (tweet.quoted_status) {
-                tweet.quoted_status = traverse(origTweet.quoted_status)
+                tweet.quoted_status = traverse(tweet.quoted_status)
               }
 
               return tweet
