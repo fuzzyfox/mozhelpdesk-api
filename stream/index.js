@@ -1,3 +1,8 @@
+/**
+ * @file Links Twitter stream, SocketIO and automatic tweet tracking together.
+ * @author William Duyck <fuzzyfox0@gmail.com>
+ */
+
 const socketio = require('socket.io')
 const Twitter = require('twitter')
 const User = require('../models/User')

@@ -1,3 +1,11 @@
+/**
+ * @file Configuration for Twitter authentication after which we will generate
+ *       a JWT for continued API usage. This is also where we gather basic
+ *       profile details for users, as well as their twitter access tokens
+ *
+ * @author William Duyck <fuzzyfox0@gmail.com>
+ */
+
 const passport = require('passport')
 const TwitterStrategy = require('passport-twitter').Strategy
 

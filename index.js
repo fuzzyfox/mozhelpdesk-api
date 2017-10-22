@@ -1,3 +1,8 @@
+/**
+ * @file Launches the server, runs initial configurations, and sets up endpoints
+ * @author William Duyck <fuzzyfox0@gmail.com>
+ */
+
 const bodyParser = require('body-parser')
 const dotenv = require('dotenv')
 const errorhandler = require('errorhandler')

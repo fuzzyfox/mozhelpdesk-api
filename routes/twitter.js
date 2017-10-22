@@ -1,3 +1,8 @@
+/**
+ * @file Twitter API proxied endpoints w/ super powers where needed.
+ * @author William Duyck <fuzzyfox0@gmail.com>
+ */
+
 const express = require('express')
 const passport = require('passport')
 const Twitter = require('twitter')
@@ -7,8 +12,11 @@ const Tweet = require('../models/Tweet')
 
 const router = express.Router()
 
+// Ensure all endpoints from here on are called with a valid JWT
 router.use(passport.authenticate('jwt', { session: false }))
 
+// Automatically initialise a twitter client instance using the current users
+// account for use by tweet endpoints
 router.use((req, res, next) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
@@ -23,6 +31,8 @@ router.use((req, res, next) => {
   next()
 })
 
+// Proxy calls to twitter search api as the current user
+//
 // BUG: There is a bug in the twitter search api which means that it doesn't get
 //      fresh/updated tweets for a HUGE delay. This is likely some caching,
 //      however adding a cacheBuster to the request has no effect. Instead we
@@ -119,6 +129,8 @@ router.get('/search/tweets', (req, res) => {
   )
 })
 
+// Proxy calls to twitter's status creation endpoint
+//
 // When a user sends a tweet we want to automatically update the states of
 // any known tweets, including marking the sent tweet as known
 router.post('/statuses/update', (req, res) => {
@@ -188,7 +200,7 @@ router.post('/statuses/update', (req, res) => {
 })
 
 // Straight proxy requests to twitter, with mozhelp information merged into
-// tweets where possible.
+// response tweets where possible.
 router.use((req, res) => {
   const method = req.method.toLowerCase()
 

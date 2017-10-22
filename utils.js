@@ -1,5 +1,19 @@
+/**
+ * @file Contains random utility methods needed throughout the server. Its
+ *       basically a dumping ground for pure methods that get called repeatedly
+ *       but dont have a real home just yet.
+ *
+ * @author William Duyck <fuzzyfox0@gmail.com>
+ */
+
 const jwt = require('jsonwebtoken')
 
+/**
+ * Generate a valid JWT for the given user.
+ *
+ * @param  {User}   user User model instance
+ * @return {string}      JWT for the given user
+ */
 const generateUserJWT = user =>
   jwt.sign(
     Object.assign(

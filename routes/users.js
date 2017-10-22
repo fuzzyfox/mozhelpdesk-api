@@ -1,11 +1,18 @@
+/**
+ * @file User endpoint handlers
+ * @author William Duyck <fuzzyfox0@gmail.com>
+ */
+
 const express = require('express')
 const passport = require('passport')
 
 const router = express.Router()
 const User = require('../models/User')
 
+// Ensure all endpoints from here on are called with a valid JWT
 router.use(passport.authenticate('jwt', { session: false }))
 
+// Get all users in the system (paginated)
 router.get('/', (req, res) => {
   User.paginate(
     {},
@@ -24,6 +31,7 @@ router.get('/', (req, res) => {
   )
 })
 
+// Get specific user of the system
 router.get('/:userId', (req, res) => {
   if (req.params.userId === 'me') {
     req.params.userId = req.user.id
@@ -42,6 +50,11 @@ router.get('/:userId', (req, res) => {
   })
 })
 
+// Update a specific user of the system. Proxying `/me` to the current user.
+//
+// Only admins can update user details that don't belong to them.
+// Only admins can update user roles.
+// All users can update their own profile data (name, picture, email)
 router.patch('/:userId', (req, res) => {
   if (req.params.userId === 'me') {
     req.params.userId = req.user.id

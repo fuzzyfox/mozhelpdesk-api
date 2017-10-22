@@ -1,3 +1,7 @@
+/**
+ * @file Tweet / ticket endpoint handlers
+ */
+
 const express = require('express')
 const passport = require('passport')
 const Twitter = require('twitter')
@@ -6,8 +10,11 @@ const router = express.Router()
 const Tweet = require('../models/Tweet')
 const stream = require('../stream').tweet
 
+// Ensure all endpoints from here on are called with a valid JWT
 router.use(passport.authenticate('jwt', { session: false }))
 
+// Automatically initialise a twitter client instance using the current users
+// account for use by tweet endpoints
 router.use((req, res, next) => {
   req.twitterClient = new Twitter({
     consumer_key: process.env.TWITTER_CONSUMER_KEY,
@@ -18,6 +25,7 @@ router.use((req, res, next) => {
   next()
 })
 
+// Get all known tweets from the system (paginated)
 router.get('/', (req, res) => {
   Tweet.paginate(
     {},
@@ -41,6 +49,7 @@ router.get('/', (req, res) => {
   )
 })
 
+// Create a new known tweet in the system
 router.post('/', (req, res) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
@@ -85,6 +94,7 @@ router.post('/', (req, res) => {
   })
 })
 
+// Get a specific known tweet
 router.get('/:tweetId', (req, res) => {
   Tweet.findById(req.params.tweetId, (err, tweet) => {
     if (err) {
@@ -101,6 +111,7 @@ router.get('/:tweetId', (req, res) => {
   })
 })
 
+// Update a specific known tweet
 router.patch('/:tweetId', (req, res) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
@@ -141,6 +152,7 @@ router.patch('/:tweetId', (req, res) => {
   })
 })
 
+// Get notes on a specific known tweet
 router.get('/:tweetId/notes', (req, res) => {
   Tweet.findById(req.params.tweetId, (err, tweet) => {
     if (err) {
@@ -155,6 +167,7 @@ router.get('/:tweetId/notes', (req, res) => {
   })
 })
 
+// Add note to a specific known tweet
 router.post('/:tweetId/notes', (req, res) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
@@ -186,6 +199,7 @@ router.post('/:tweetId/notes', (req, res) => {
   })
 })
 
+// Update a note on a specific known tweet
 router.put('/:tweetId/notes/:noteId', (req, res) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
@@ -233,6 +247,7 @@ router.put('/:tweetId/notes/:noteId', (req, res) => {
   )
 })
 
+// Delete a note from a specific known tweet
 router.delete('/:tweetId/notes/:noteId', (req, res) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
