@@ -6,7 +6,7 @@
 const socketio = require('socket.io')
 const Twitter = require('twitter')
 const User = require('../models/User')
-const Tweet = require('../models/Tweet')
+const Ticket = require('../models/Ticket')
 const _ = require('lodash')
 
 const isTweet = _.conforms({
@@ -68,19 +68,26 @@ module.exports = {
                   return this.tweet.emit('raw', event)
                 }
 
-                const tweet = new Tweet(event)
-                tweet.twid = event.id_str
-                tweet.save((err, tweet) => {
+                const ticket = new Ticket(event)
+                ticket.twid = event.id_str
+                ticket.save((err, ticket) => {
                   if (err) {
                     console.error(err)
-                    return this.tweet.emit('error', err.toString())
+                    return this.ticket.emit('error', err.toString())
                   }
 
-                  Tweet.hydrate(tweet, twitterClient)
-                    .catch(console.warn)
-                    .then(hydrated =>
-                      this.tweet.emit('save', hydrated || tweet)
-                    )
+                  this.tweet.emit(
+                    'save',
+                    Object.assign(event, ticket.toObject())
+                  )
+
+                  // NOTE: This is a bad idea as a busy stream means hitting the
+                  //       twitter rate limits a butt tone quicker
+                  // Tweet.hydrateTweetTickets(ticket, twitterClient)
+                  //   .catch(console.warn)
+                  //   .then(hydrated =>
+                  //     this.tweet.emit('save', hydrated || ticket)
+                  //   )
                 })
               })
 

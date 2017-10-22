@@ -1,9 +1,8 @@
 /**
  * @file This file contains the schema / model setup for "Tweets" which are
- *       treated like tickets by the system. It will likely be renamed to
- *       reflect this if/when slack support is added. Right now we cache just
- *       the bare minimum data from tweets that we need in order to correctly
- *       display them in the app, as well as to respond/track them.
+ *       treated like tickets by the system. Right now we cache just the bare
+ *       minimum data from tweets that we need in order to correctly display
+ *       them in the app, as well as to respond/track them.
  *
  * @author William Duyck <fuzzyfox0@gmail.com>
  */
@@ -41,23 +40,23 @@ const noteSchema = new mongoose.Schema(
 )
 
 /**
- * Tweet Schema
+ * Ticket Schema
  *
  * @type {mongoose.Schema}
  */
-const tweetSchema = new mongoose.Schema({
+const ticketSchema = new mongoose.Schema({
   /**
    * Twitter's ID for the tweet (id_str)
    * @type {string}
    */
   twid: { type: String, unique: true, required: true },
   /**
-   * Tweet contents (or status)
+   * Ticket contents (or status)
    * @type {string}
    */
   text: String,
   /**
-   * Tweet language
+   * Ticket language
    *
    * We cache this so we can add translation in the near future
    *
@@ -65,7 +64,7 @@ const tweetSchema = new mongoose.Schema({
    */
   lang: String,
   /**
-   * Tweet in reply to id
+   * Ticket in reply to id
    * @type {string}
    */
   in_reply_to_status_id_str: String,
@@ -81,7 +80,7 @@ const tweetSchema = new mongoose.Schema({
   created_at: Date,
 
   /**
-   * Twitter user who created the tweet
+   * Twitter user who created the tweet / ticket
    * @type {object}
    */
   user: {
@@ -113,36 +112,36 @@ const tweetSchema = new mongoose.Schema({
 })
 
 /**
- * Dumby tweet factory
+ * Dumby ticket factory
  *
  * This factory exists so that we can ensure a somewhat standard response when
  * merging known tweets with responses from the twitter api/stream.
  *
- * @return {object} mozhelp related properties all tweets should have
+ * @return {object} mozhelp related properties all tweets / tickets should have
  */
-const dumbyTweetObj = () => ({
+const dumbyTicketObj = () => ({
   mozhelp_status: 'NO_ACTION_REQUIRED',
   mozhelp_notes: []
 })
 
-tweetSchema.plugin(mongooseAutopopulate)
-tweetSchema.plugin(mongoosePaginate)
+ticketSchema.plugin(mongooseAutopopulate)
+ticketSchema.plugin(mongoosePaginate)
 
 /**
- * Merge tweet(s) from twitter api/stream with known/tracked tweets in the db
+ * Merge tweet(s) from twitter api/stream with known/tracked tickets in the db
  *
- * @param  {(object|Array.<object>)}                      tweets               Tweet(s) to merge
+ * @param  {(object|Array.<object>)}                      tweets              Tweets(s) to merge
  * @param  {function}                                     [callback=function(] Callback method given merged tweet(s)
  * @return {(Promise.<object>|Promise.<Array.<object>>)}                       Promise of merged tweet(s)
  */
-tweetSchema.statics.mergeWithKnown = function(
+ticketSchema.statics.mergeTweetsWithTickets = function(
   tweets,
   callback = function() {}
 ) {
   return new Promise((resolve, reject) => {
     const tweetIds = new Set()
-    const isSingleTweet = !Array.isArray(tweets)
-    tweets = isSingleTweet ? [tweets] : tweets
+    const isSingleTicket = !Array.isArray(tweets)
+    tweets = isSingleTicket ? [tweets] : tweets
     tweets = tweets.map(tweet => (tweet.toObject ? tweet.toObject() : tweet))
 
     tweets.forEach(function traverse(tweet) {
@@ -159,16 +158,16 @@ tweetSchema.statics.mergeWithKnown = function(
       }
     })
 
-    this.find({ twid: { $in: [...tweetIds] } }, (err, knownTweets) => {
-      knownTweets = knownTweets || []
-      knownTweets = knownTweets.map(
+    this.find({ twid: { $in: [...tweetIds] } }, (err, tickets) => {
+      tickets = tickets || []
+      tickets = tickets.map(
         tweet => (tweet.toObject ? tweet.toObject() : tweet)
       )
 
       tweets = tweets.map(function traverse(tweet) {
         tweet = Object.assign(
-          knownTweets.find(known => known.twid === tweet.id_str) ||
-            dumbyTweetObj(),
+          tickets.find(known => known.twid === tweet.id_str) ||
+            dumbyTicketObj(),
           tweet
         )
 
@@ -183,7 +182,7 @@ tweetSchema.statics.mergeWithKnown = function(
         return tweet
       })
 
-      if (isSingleTweet) {
+      if (isSingleTicket) {
         tweets = tweets[0]
       }
 
@@ -201,41 +200,42 @@ tweetSchema.statics.mergeWithKnown = function(
  *       hydrate tweets completely due to the nested nature of tweets
  *       (retweeted_status, quoted_status)
  *
- * @param  {(object|Array.<object>)}                      docs                 Tweet basics (cached data)
+ * @param  {(object|Array.<object>)}                      docs                 Ticket basics (cached data)
  * @param  {Twitter}                                      twitterClient        Twitter client instance to use when hydrating
  * @param  {function}                                     [callback=function(] Callback method given hydrated tweet(s)
  * @return {(Promise.<object>|Promise.<Array.<object>>)}                       Promise of hydrated tweet(s)
  */
-tweetSchema.statics.hydrate = function(
-  docs,
+ticketSchema.statics.hydrateTweetTickets = function(
+  tickets,
   twitterClient,
   callback = function() {}
 ) {
   return new Promise((resolve, reject) => {
-    const isSingleDoc = !Array.isArray(docs)
-    docs = isSingleDoc ? [docs] : docs
-    docs = docs.map(doc => doc.toObject())
+    const isSingleTicket = !Array.isArray(tickets)
+    tickets = isSingleTicket ? [tickets] : tickets
+    tickets = tickets.map(ticket => ticket.toObject())
 
     twitterClient.get(
       '/statuses/lookup',
       {
-        id: docs.map(doc => doc.twid).join(',')
+        id: tickets.map(ticket => ticket.twid).join(',')
       },
-      (err, hydratedTweets) => {
+      (err, hydratedTickets) => {
         if (err) {
-          callback(err, docs)
+          callback(err, tickets)
           return reject(err)
         }
 
-        docs = docs.map(doc =>
+        tickets = tickets.map(ticket =>
           Object.assign(
-            doc,
-            hydratedTweets.find(hydrated => hydrated.id_str === doc.twid) || {}
+            ticket,
+            hydratedTickets.find(hydrated => hydrated.id_str === ticket.twid) ||
+              {}
           )
         )
 
         const tweetIds = new Set()
-        docs.forEach(function traverse(tweet) {
+        tickets.forEach(function traverse(tweet) {
           tweetIds.add(tweet.id_str)
 
           if (tweet.retweeted_status) {
@@ -254,45 +254,42 @@ tweetSchema.statics.hydrate = function(
           {
             id: [...tweetIds].slice(0, 100).join(',')
           },
-          (err, hydratedTweets) => {
+          (err, hydratedTickets) => {
             if (err) {
-              callback(err, docs)
+              callback(err, tickets)
               return reject(err)
             }
 
-            docs = docs.map(function traverse(tweet) {
-              const hydratedTweet = hydratedTweets.find(
+            tickets = tickets.map(function traverse(tweet) {
+              const hydratedTicket = hydratedTickets.find(
                 hydrated => hydrated.id_str === tweet.id_str
               )
 
-              if (!hydratedTweet) {
+              if (!hydratedTicket) {
                 return tweet
               }
 
-              const origTweet = tweet
-              tweet = Object.assign({}, origTweet, hydratedTweet)
+              const origTicket = tweet
+              tweet = Object.assign({}, origTicket, hydratedTicket)
 
               if (tweet.retweeted_status) {
-                tweet.retweeted_status = traverse(origTweet.retweeted_status)
+                tweet.retweeted_status = traverse(origTicket.retweeted_status)
               }
 
               if (tweet.quoted_status) {
-                tweet.quoted_status = traverse(origTweet.quoted_status)
+                tweet.quoted_status = traverse(origTicket.quoted_status)
               }
 
               return tweet
             })
 
-            console.log(docs)
-
-            this.mergeWithKnown(docs)
-              .then(tweets => {
-                console.log(tweets)
-
-                isSingleDoc ? resolve(tweets[0]) : resolve(tweets)
-              })
+            this.mergeTweetsWithTickets(tickets)
+              .then(
+                tweets =>
+                  isSingleTicket ? resolve(tweets[0]) : resolve(tweets)
+              )
               .catch(err => {
-                callback(err, docs)
+                callback(err, tickets)
                 reject(err)
               })
           }
@@ -306,12 +303,12 @@ tweetSchema.statics.hydrate = function(
  * Note model
  * @type {mongoose.Model}
  */
-tweetSchema.statics.Note = mongoose.model('Note', noteSchema)
+ticketSchema.statics.Note = mongoose.model('Note', noteSchema)
 
 /**
- * Tweet model
+ * Ticket model
  * @type {mongoose.Model}
  */
-const Tweet = mongoose.model('Tweet', tweetSchema)
+const Ticket = mongoose.model('Ticket', ticketSchema)
 
-module.exports = Tweet
+module.exports = Ticket

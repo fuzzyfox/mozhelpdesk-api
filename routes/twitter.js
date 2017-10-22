@@ -8,7 +8,7 @@ const passport = require('passport')
 const Twitter = require('twitter')
 const stream = require('../stream').tweet
 
-const Tweet = require('../models/Tweet')
+const Ticket = require('../models/Ticket')
 
 const router = express.Router()
 
@@ -88,11 +88,11 @@ router.get('/search/tweets', (req, res) => {
               err ? reject(err) : resolve(hydratedTweets)
           )
         ),
-        Tweet.mergeWithKnown(result.statuses)
+        Ticket.mergeTweetsWithTickets(result.statuses)
       ])
-        .then(([hydratedTweets, knownTweets]) => {
+        .then(([hydratedTweets, tickets]) => {
           if (hydratedTweets && hydratedTweets.length) {
-            result.statuses = knownTweets.map(function traverse(tweet) {
+            result.statuses = tickets.map(function traverse(tweet) {
               const hydratedTweet = hydratedTweets.find(
                 hydrated => hydrated.id_str === tweet.id_str
               )
@@ -147,49 +147,49 @@ router.post('/statuses/update', (req, res) => {
       res.status(201).json(sentTweet)
 
       // handle response as a sent sentTweet (no need to block response)
-      const newTweet = new Tweet(sentTweet)
-      newTweet.mozhelp_status = 'SENT'
-      newTweet.save((err, newTweet) => {
+      const newTicket = new Ticket(sentTweet)
+      newTicket.mozhelp_status = 'SENT'
+      newTicket.save((err, newTicket) => {
         if (err) {
           return console.error(err)
         }
 
-        Tweet.hydrate(newTweet, req.twitterClient)
-          .catch(console.warn)
-          .then(hydrated => stream && stream.emit('save', hydrated || newTweet))
+        stream.emit('save', Object.assign(sentTweet, newTicket.toObject()))
       })
 
       // detect status change of a known tweet (no need to block response)
       if (req.body.in_reply_to_status_id) {
-        Tweet.findOne(
+        Ticket.findOne(
           { twid: req.body.in_reply_to_status_id },
-          (err, knownTweet) => {
+          (err, ticket) => {
             if (err) {
               return console.error(err)
             }
 
-            if (!knownTweet) {
+            if (!ticket) {
               return
             }
 
             if (req.body.mozhelp_status) {
-              knownTweet.mozhelp_status = req.body.mozhelp_status.toUpperCase()
+              ticket.mozhelp_status = req.body.mozhelp_status.toUpperCase()
             } else if (
-              ['NEW', 'NO_ACTION_REQUIRED'].includes(knownTweet.mozhelp_status)
+              ['NEW', 'NO_ACTION_REQUIRED'].includes(ticket.mozhelp_status)
             ) {
-              knownTweet.mozhelp_status = 'IN_PROGRESS'
+              ticket.mozhelp_status = 'IN_PROGRESS'
             }
 
-            knownTweet.save((err, knownTweet) => {
+            ticket.save((err, ticket) => {
               if (err) {
                 return console.error(err)
               }
 
-              Tweet.hydrate(knownTweet, req.twitterClient)
+              // stream.emit('save', ticket)
+
+              // NOTE: Think about possibly cutting this hydrate call...
+              Ticket.hydrateTweetTickets(ticket, req.twitterClient)
                 .catch(console.warn)
                 .then(
-                  hydrated =>
-                    stream && stream.emit('save', hydrated || knownTweet)
+                  hydrated => stream && stream.emit('save', hydrated || ticket)
                 )
             })
           }
@@ -227,21 +227,21 @@ router.use((req, res) => {
 
         // result is single tweet?
         if (result.id_str && result.text) {
-          return Tweet.mergeWithKnown(result)
+          return Ticket.mergeTweetsWithTickets(result)
             .catch(console.error)
             .then(tweet => res.status(200).json(tweet || result))
         }
 
         // simple tweet array
         if (Array.isArray(result) && result[0].id_str && result[0].text) {
-          return Tweet.mergeWithKnown(result)
+          return Ticket.mergeTweetsWithTickets(result)
             .catch(console.error)
             .then(tweets => res.status(200).json(tweets || result))
         }
 
         // single nested tweet
         if (result.status && result.status.id_str) {
-          return Tweet.mergeWithKnown(result.status)
+          return Ticket.mergeTweetsWithTickets(result.status)
             .catch(console.error)
             .then(tweet =>
               res.status(200).json({
@@ -253,7 +253,7 @@ router.use((req, res) => {
 
         // tweets nested in an obj
         if (result.statuses && result.statuses.length) {
-          return Tweet.mergeWithKnown(result.statuses)
+          return Ticket.mergeTweetsWithTickets(result.statuses)
             .catch(console.error)
             .then(tweets =>
               res.status(200).json({

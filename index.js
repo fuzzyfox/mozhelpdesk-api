@@ -77,7 +77,7 @@ app.use('/auth', require('./routes/auth'))
 app.use('/', require('./routes/index'))
 app.use('/users', require('./routes/users'))
 app.use('/twitter', require('./routes/twitter'))
-app.use('/tweets', require('./routes/tweets'))
+app.use('/tickets', require('./routes/tickets'))
 app.use('/stream', require('./routes/stream'))
 
 // Error handling

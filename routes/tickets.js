@@ -7,7 +7,7 @@ const passport = require('passport')
 const Twitter = require('twitter')
 
 const router = express.Router()
-const Tweet = require('../models/Tweet')
+const Tweet = require('../models/Ticket')
 const stream = require('../stream').tweet
 
 // Ensure all endpoints from here on are called with a valid JWT
@@ -39,7 +39,7 @@ router.get('/', (req, res) => {
         return res.status(500).json({ error: err })
       }
 
-      Tweet.hydrate(result.docs, req.twitterClient)
+      Tweet.hydrateTweetTickets(result.docs, req.twitterClient)
         .catch(console.error)
         .then(hydrated => {
           result.docs = hydrated || result.docs
@@ -85,7 +85,7 @@ router.post('/', (req, res) => {
 
           res.status(201).json({ _id: tweet.id })
 
-          Tweet.hydrate(tweet, req.twitterClient)
+          Tweet.hydrateTweetTickets(tweet, req.twitterClient)
             .catch(console.warn)
             .then(hydrated => stream && stream.emit('save', hydrated || tweet))
         })
@@ -105,7 +105,7 @@ router.get('/:tweetId', (req, res) => {
       return res.status(404).json({ error: 'Not found' })
     }
 
-    Tweet.hydrate(tweet, req.twitterClient)
+    Tweet.hydrateTweetTickets(tweet, req.twitterClient)
       .catch(console.error)
       .then(hydrated => res.status(200).json(hydrated || tweet))
   })
@@ -145,7 +145,7 @@ router.patch('/:tweetId', (req, res) => {
 
       res.status(204).end()
 
-      Tweet.hydrate(tweet, req.twitterClient)
+      Tweet.hydrateTweetTickets(tweet, req.twitterClient)
         .catch(console.warn)
         .then(hydrated => stream && stream.emit('save', hydrated || tweet))
     })
@@ -192,7 +192,7 @@ router.post('/:tweetId/notes', (req, res) => {
 
       res.status(201).json({ _id: tweet.mozhelp_notes.pop().id })
 
-      Tweet.hydrate(tweet, req.twitterClient)
+      Tweet.hydrateTweetTickets(tweet, req.twitterClient)
         .catch(console.warn)
         .then(hydrated => stream && stream.emit('save', hydrated || tweet))
     })
@@ -239,7 +239,7 @@ router.put('/:tweetId/notes/:noteId', (req, res) => {
 
         res.status(204).end()
 
-        Tweet.hydrate(tweet, req.twitterClient)
+        Tweet.hydrateTweetTickets(tweet, req.twitterClient)
           .catch(console.warn)
           .then(hydrated => stream && stream.emit('save', hydrated || tweet))
       })
@@ -287,7 +287,7 @@ router.delete('/:tweetId/notes/:noteId', (req, res) => {
 
         res.status(204).end()
 
-        Tweet.hydrate(tweet, req.twitterClient)
+        Tweet.hydrateTweetTickets(tweet, req.twitterClient)
           .catch(console.warn)
           .then(hydrated => stream && stream.emit('save', hydrated || tweet))
       })
