@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Auth Success!</title>
+</head>
+<body>
+  <h1>Auth Success!</h1>
+  <p><strong>Auth token:</strong> {{ authToken }}</p>
+
+  <script type="application/javascript" charset="utf-8">
+    window.opener.postMessage(JSON.stringify({ success: '{{ authToken }}' }), '*')
+  </script>
+</body>
+</html>

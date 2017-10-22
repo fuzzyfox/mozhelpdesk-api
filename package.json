@@ -1,0 +1,62 @@
+{
+  "name": "mozhelp-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "npm run lint",
+    "lint": "npm run lint:js",
+    "lint:js": "eslint --ext .js index.js src --fix",
+    "precommit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.js": [
+      "npm run lint:js",
+      "git add"
+    ],
+    "**/*.js": [
+      "npm run lint:js",
+      "git add"
+    ]
+  },
+  "author": "William Duyck <wduyck@gmail.com>",
+  "license": "MPL-2.0",
+  "devDependencies": {
+    "eslint": "^4.8.0",
+    "eslint-config-prettier": "^2.6.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-friendly-formatter": "^3.0.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-node": "^5.2.0",
+    "eslint-plugin-prettier": "^2.3.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "husky": "^0.14.3",
+    "lint-staged": "^4.2.3",
+    "mocha": "^4.0.1",
+    "prettier": "^1.7.4"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cors": "^2.8.4",
+    "dotenv": "^4.0.0",
+    "errorhandler": "^1.5.0",
+    "express": "^4.16.1",
+    "express-nunjucks": "^2.2.3",
+    "express-session": "^1.15.6",
+    "express-status-monitor": "^1.0.1",
+    "jsonwebtoken": "^8.0.1",
+    "lusca": "^1.5.2",
+    "mongoose": "^4.12.0",
+    "mongoose-autopopulate": "^0.6.0",
+    "mongoose-paginate": "^5.0.3",
+    "morgan": "^1.9.0",
+    "nunjucks": "^3.0.1",
+    "passport": "^0.4.0",
+    "passport-jwt": "^3.0.0",
+    "passport-twitter": "^1.0.4",
+    "twitter": "^1.7.1",
+    "uuid": "^3.1.0"
+  }
+}

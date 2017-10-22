@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Auth Failure!</title>
+</head>
+<body>
+  <h1>Auth Failure!</h1>
+
+  <script type="application/javascript" charset="utf-8">
+    window.opener.postMessage(JSON.stringify({
+      error: {{ error }},
+      failure: {{ info }}
+    }), '*')
+  </script>
+</body>
+</html>
