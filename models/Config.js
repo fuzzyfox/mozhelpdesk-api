@@ -49,7 +49,7 @@ schema.statics.init = function() {
         name: 'stream',
         value: {
           search_term:
-            'mozhelp OR #mozhelp OR @mozhelp OR (mozfest AND help) OR (#mozfest AND help) or (@mozillafestival AND help)',
+            'mozhelp OR #mozhelp OR @mozhelp OR (mozfest AND help) OR (#mozfest AND help) OR (@mozillafestival AND help)',
           user_id: ''
         }
       })
