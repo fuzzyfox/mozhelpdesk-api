@@ -24,10 +24,11 @@ router.get('/', (req, res) => {
       return res.status(500).json({ error: 'Invalid stream configuration' })
     }
 
-    res.status(200).json({
-      ...config.toObject().value,
-      is_active: !!stream.twitterStream
-    })
+    res.status(200).json(
+      Object.assign({}, config.toObject().value, {
+        is_active: !!stream.twitterStream
+      })
+    )
   })
 })
 

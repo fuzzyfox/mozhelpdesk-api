@@ -72,11 +72,12 @@ router.post('/', (req, res) => {
           return res.status(500).json({ error: err })
         }
 
-        tweet = new Tweet({
-          ...tweet,
-          twid: tweet.id_str,
-          mozhelp_status: req.body.mozhelp_status || 'NEW'
-        })
+        tweet = new Tweet(
+          Object.assign({}, tweet, {
+            twid: tweet.id_str,
+            mozhelp_status: req.body.mozhelp_status || 'NEW'
+          })
+        )
 
         tweet.save((err, tweet) => {
           if (err) {

@@ -41,10 +41,7 @@ router.use((req, res, next) => {
 router.get('/search/tweets', (req, res) => {
   return req.twitterClient.get(
     '/search/tweets',
-    {
-      ...req.query,
-      cacheBuster: Date.now()
-    },
+    Object.assign({}, req.query, { cacheBuster: Date.now() }),
     (err, result, response) => {
       if (err) {
         return res.status(500).json({ error: err })
@@ -119,10 +116,7 @@ router.get('/search/tweets', (req, res) => {
         })
         .catch(err => {
           console.log(err)
-          res.status(200).json({
-            ...result,
-            error: err
-          })
+          res.status(200).json(Object.assign({}, result, { error: err }))
         })
     }
   )
@@ -207,10 +201,7 @@ router.use((req, res) => {
   if (method === 'get') {
     return req.twitterClient.get(
       req.path,
-      {
-        ...req.query,
-        cacheBuster: Date.now()
-      },
+      Object.assign({}, req.query, { cacheBuster: Date.now() }),
       (err, result, response) => {
         if (err) {
           return res.status(500).json({ error: err })
@@ -244,10 +235,11 @@ router.use((req, res) => {
           return Ticket.mergeTweetsWithTickets(result.status)
             .catch(console.error)
             .then(tweet =>
-              res.status(200).json({
-                ...result,
-                status: tweet || result.status
-              })
+              res.status(200).json(
+                Object.assign({}, result, {
+                  statuses: tweet || result.status
+                })
+              )
             )
         }
 
@@ -256,10 +248,11 @@ router.use((req, res) => {
           return Ticket.mergeTweetsWithTickets(result.statuses)
             .catch(console.error)
             .then(tweets =>
-              res.status(200).json({
-                ...result,
-                statuses: tweets || result.statuses
-              })
+              res.status(200).json(
+                Object.assign({}, result, {
+                  statuses: tweets || result.statuses
+                })
+              )
             )
         }
 
