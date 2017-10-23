@@ -147,6 +147,7 @@ router.post('/statuses/update', (req, res) => {
 
       // handle response as a sent sentTweet (no need to block response)
       const newTicket = new Ticket(sentTweet)
+      newTicket.twid = sentTweet.id_str
       newTicket.mozhelp_status = 'SENT'
       newTicket.save((err, newTicket) => {
         if (err) {

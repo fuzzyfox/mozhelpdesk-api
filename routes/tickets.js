@@ -30,8 +30,8 @@ router.get('/', (req, res) => {
   Tweet.paginate(
     {},
     {
-      offset: req.query.offset,
-      limit: Math.max(1, Math.min(req.query.limit || 25, 25)),
+      offset: parseInt(req.query.offset, 10) || 0,
+      limit: Math.max(1, Math.min(parseInt(req.query.limit, 10) || 100, 100)),
       page: req.query.page || 1
     },
     (err, result) => {
@@ -85,9 +85,11 @@ router.post('/', (req, res) => {
 
           res.status(201).json({ _id: tweet.id })
 
-          Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-            .catch(console.warn)
-            .then(hydrated => stream && stream.emit('save', hydrated || tweet))
+          stream && stream.emit('save', tweet)
+
+          // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
+          //   .catch(console.warn)
+          //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
         })
       }
     )
@@ -145,9 +147,11 @@ router.patch('/:tweetId', (req, res) => {
 
       res.status(204).end()
 
-      Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-        .catch(console.warn)
-        .then(hydrated => stream && stream.emit('save', hydrated || tweet))
+      stream && stream.emit('save', tweet)
+
+      // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
+      //   .catch(console.warn)
+      //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
     })
   })
 })
@@ -185,6 +189,7 @@ router.post('/:tweetId/notes', (req, res) => {
     const note = Tweet.Note(req.body)
     note.user = req.user._id
     tweet.mozhelp_notes.push(note)
+
     tweet.save((err, tweet) => {
       if (err) {
         return res.status(500).json({ error: err })
@@ -192,9 +197,17 @@ router.post('/:tweetId/notes', (req, res) => {
 
       res.status(201).json({ _id: tweet.mozhelp_notes.pop().id })
 
-      Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-        .catch(console.warn)
-        .then(hydrated => stream && stream.emit('save', hydrated || tweet))
+      Tweet.findById(req.params.tweetId, (err, tweet) => {
+        if (err) {
+          console.error(err)
+          return stream && stream.emit('error', err)
+        }
+        stream && stream.emit('save', tweet.toObject())
+      })
+
+      // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
+      //   .catch(console.warn)
+      //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
     })
   })
 })
@@ -239,9 +252,17 @@ router.put('/:tweetId/notes/:noteId', (req, res) => {
 
         res.status(204).end()
 
-        Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-          .catch(console.warn)
-          .then(hydrated => stream && stream.emit('save', hydrated || tweet))
+        Tweet.findById(req.params.tweetId, (err, tweet) => {
+          if (err) {
+            console.error(err)
+            return stream && stream.emit('error', err)
+          }
+          stream && stream.emit('save', tweet.toObject())
+        })
+
+        // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
+        //   .catch(console.warn)
+        //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
       })
     }
   )
@@ -287,9 +308,17 @@ router.delete('/:tweetId/notes/:noteId', (req, res) => {
 
         res.status(204).end()
 
-        Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-          .catch(console.warn)
-          .then(hydrated => stream && stream.emit('save', hydrated || tweet))
+        Tweet.findById(req.params.tweetId, (err, tweet) => {
+          if (err) {
+            console.error(err)
+            return stream && stream.emit('error', err)
+          }
+          stream && stream.emit('save', tweet.toObject())
+        })
+
+        // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
+        //   .catch(console.warn)
+        //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
       })
     }
   )
