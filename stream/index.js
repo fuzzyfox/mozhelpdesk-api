@@ -60,12 +60,24 @@ module.exports = {
         })
 
         const startStream = () => {
+          if (!twitterClient) {
+            return this.tweet.emit('error', 'no twitter client configured')
+          }
           twitterClient.stream(
             'statuses/filter',
             {
               track: config.value.search_term
             },
             stream => {
+              if (!stream) {
+                console.error('stream setup failed')
+                twitterStream = null
+                this.tweet.emit('error', 'stream setup failed')
+                clearTimeout(twitterStreamReconnectTimeout)
+                twitterStreamReconnectTimeout = setTimeout(startStream, 20000)
+                return
+              }
+
               twitterStream = stream
 
               twitterStream.on('data', event => {
@@ -75,6 +87,11 @@ module.exports = {
 
                 const ticket = new Ticket(event)
                 ticket.twid = event.id_str
+
+                if (event.retweeted_status) {
+                  ticket.mozhelp_status = 'NO_ACTION_REQUIRED'
+                }
+
                 ticket.save((err, ticket) => {
                   if (err) {
                     console.error(err)
@@ -100,7 +117,7 @@ module.exports = {
                 console.error(err)
                 twitterStream = null
                 this.tweet.emit('error', err.toString())
-                twitterStreamReconnectTimeout = setTimeout(startStream, 5000)
+                twitterStreamReconnectTimeout = setTimeout(startStream, 20000)
               })
             }
           )

@@ -32,7 +32,7 @@ router.get('/', (req, res) => {
     {
       offset: parseInt(req.query.offset, 10) || 0,
       limit: Math.max(1, Math.min(parseInt(req.query.limit, 10) || 100, 100)),
-      page: req.query.page || 1
+      page: parseInt(req.query.page, 10) || 1
     },
     (err, result) => {
       if (err) {
