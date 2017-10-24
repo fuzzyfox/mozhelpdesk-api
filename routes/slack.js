@@ -8,7 +8,7 @@ const passport = require('passport')
 const router = express.Router()
 const Slack = require('../models/Slack')
 const slackbots = require('../streams/slack').bots
-const stream = require('../stream').slack
+const io = require('../io')
 
 // Ensure all endpoints from here on are called with a valid JWT
 router.use(passport.authenticate('jwt', { session: false }))
@@ -84,7 +84,7 @@ router.patch('/:ticketId', (req, res) => {
 
       res.status(204).end()
 
-      stream && stream.emit('save', slackTicket)
+      io.slack && io.slack.emit('save', slackTicket)
     })
   })
 })
@@ -138,11 +138,11 @@ router.post('/:ticketId/reply', (req, res) => {
 
         slackTicket.save((err, slackTicket) => {
           if (err) {
-            stream && stream.emit('error', err.toString())
+            io.slack && io.slack.emit('error', err.toString())
             return console.error(err)
           }
 
-          stream && stream.emit('save', slackTicket.toObject())
+          io.slack && io.slack.emit('save', slackTicket.toObject())
         })
       })
       .catch(err => {
@@ -191,7 +191,7 @@ router.post('/:ticketId/notes', (req, res) => {
         return res.status(500).json({ error: err })
       }
 
-      stream && stream.emit('save', slackTicket.toObject())
+      io.slack && io.slack.emit('save', slackTicket.toObject())
 
       res.status(201).json({ _id: slackTicket.mozhelp_notes.pop().id })
     })
@@ -236,7 +236,7 @@ router.put('/:ticketId/notes/:noteId', (req, res) => {
           return res.status(500).json({ error: err })
         }
 
-        stream && stream.emit('save', slackTicket.toObject())
+        io.slack && io.slack.emit('save', slackTicket.toObject())
 
         res.status(204).end()
       })
@@ -282,7 +282,7 @@ router.delete('/:ticketId/notes/:noteId', (req, res) => {
           return res.status(500).json({ error: err })
         }
 
-        stream && stream.emit('save', slackTicket.toObject())
+        io.slack && io.slack.emit('save', slackTicket.toObject())
         res.status(204).end()
       })
     }

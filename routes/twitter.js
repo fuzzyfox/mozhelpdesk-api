@@ -6,7 +6,7 @@
 const express = require('express')
 const passport = require('passport')
 const Twitter = require('twitter')
-const stream = require('../stream').tweet
+const io = require('../io')
 
 const Ticket = require('../models/Ticket')
 
@@ -148,7 +148,7 @@ router.post('/statuses/update', (req, res) => {
           return console.error(err)
         }
 
-        stream.emit('save', Object.assign(sentTweet, newTicket.toObject()))
+        io.tweet.emit('save', Object.assign(sentTweet, newTicket.toObject()))
       })
 
       // detect status change of a known tweet (no need to block response)
@@ -177,13 +177,13 @@ router.post('/statuses/update', (req, res) => {
                 return console.error(err)
               }
 
-              // stream.emit('save', ticket)
+              // io.tweet.emit('save', ticket)
 
               // NOTE: Think about possibly cutting this hydrate call...
               Ticket.hydrateTweetTickets(ticket, req.twitterClient)
                 .catch(console.warn)
                 .then(
-                  hydrated => stream && stream.emit('save', hydrated || ticket)
+                  hydrated => io && io.tweet.emit('save', hydrated || ticket)
                 )
             })
           }

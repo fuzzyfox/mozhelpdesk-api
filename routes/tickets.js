@@ -8,7 +8,7 @@ const Twitter = require('twitter')
 
 const router = express.Router()
 const Ticket = require('../models/Ticket')
-const stream = require('../stream').tweet
+const io = require('../io')
 
 // Ensure all endpoints from here on are called with a valid JWT
 router.use(passport.authenticate('jwt', { session: false }))
@@ -84,13 +84,9 @@ router.post('/', (req, res) => {
             return res.status(500).json({ error: err })
           }
 
+          io.tweet && io.tweet.emit('save', ticket)
+
           res.status(201).json({ _id: ticket.id })
-
-          stream && stream.emit('save', ticket)
-
-          // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-          //   .catch(console.warn)
-          //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
         })
       }
     )
@@ -146,13 +142,9 @@ router.patch('/:ticketId', (req, res) => {
         return res.status(500).json({ error: err })
       }
 
+      io.tweet && io.tweet.emit('save', tweet)
+
       res.status(204).end()
-
-      stream && stream.emit('save', tweet)
-
-      // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-      //   .catch(console.warn)
-      //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
     })
   })
 })
@@ -196,19 +188,9 @@ router.post('/:ticketId/notes', (req, res) => {
         return res.status(500).json({ error: err })
       }
 
+      io.tweet && io.tweet.emit('save', tweet.toObject())
+
       res.status(201).json({ _id: tweet.mozhelp_notes.pop().id })
-
-      Ticket.findById(req.params.ticketId, (err, tweet) => {
-        if (err) {
-          console.error(err)
-          return stream && stream.emit('error', err)
-        }
-        stream && stream.emit('save', tweet.toObject())
-      })
-
-      // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-      //   .catch(console.warn)
-      //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
     })
   })
 })
@@ -251,19 +233,9 @@ router.put('/:ticketId/notes/:noteId', (req, res) => {
           return res.status(500).json({ error: err })
         }
 
+        io.tweet && io.tweet.emit('save', tweet.toObject())
+
         res.status(204).end()
-
-        Ticket.findById(req.params.ticketId, (err, tweet) => {
-          if (err) {
-            console.error(err)
-            return stream && stream.emit('error', err)
-          }
-          stream && stream.emit('save', tweet.toObject())
-        })
-
-        // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-        //   .catch(console.warn)
-        //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
       })
     }
   )
@@ -307,19 +279,9 @@ router.delete('/:ticketId/notes/:noteId', (req, res) => {
           return res.status(500).json({ error: err })
         }
 
+        io.tweet && io.tweet.emit('save', tweet.toObject())
+
         res.status(204).end()
-
-        Ticket.findById(req.params.ticketId, (err, tweet) => {
-          if (err) {
-            console.error(err)
-            return stream && stream.emit('error', err)
-          }
-          stream && stream.emit('save', tweet.toObject())
-        })
-
-        // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
-        //   .catch(console.warn)
-        //   .then(hydrated => stream && stream.emit('save', hydrated || tweet))
       })
     }
   )

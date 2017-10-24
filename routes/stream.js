@@ -5,7 +5,7 @@
 
 const express = require('express')
 const passport = require('passport')
-const stream = require('../stream')
+const stream = require('../streams/twitter')
 const Config = require('../models/Config')
 
 const router = express.Router()

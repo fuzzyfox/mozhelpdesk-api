@@ -1,5 +1,7 @@
 const SlackBot = require('slackbots')
+
 const Slack = require('../models/Slack')
+const io = require('../io')
 
 const bots = {}
 
@@ -25,6 +27,7 @@ botTokens.forEach(token => {
 
   bot.on('error', event => {
     console.error('error', event)
+    io.slack && io.slack.emit('error', event)
   })
 
   bot.on('message', event => {
@@ -83,11 +86,11 @@ botTokens.forEach(token => {
               // Save the slack ticket
               slack.save((err, slack) => {
                 if (err) {
-                  // socketio emit error
+                  io.slack && io.slack.emit('error', err)
                   return console.error(err)
                 }
 
-                // socketio emit save
+                io.slack && io.slack.emit('save', slack)
 
                 if (isNewTicket) {
                   bot.postMessage(

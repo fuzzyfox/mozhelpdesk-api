@@ -40,7 +40,7 @@ const app = express()
 const http = require('http').Server(app)
 
 // Configure stream/socketio
-require('./stream').init(http)
+require('./io').init(http)
 
 // Configure slack bots
 require('./streams/slack')
