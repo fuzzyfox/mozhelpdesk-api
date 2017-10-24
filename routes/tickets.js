@@ -7,7 +7,7 @@ const passport = require('passport')
 const Twitter = require('twitter')
 
 const router = express.Router()
-const Tweet = require('../models/Ticket')
+const Ticket = require('../models/Ticket')
 const stream = require('../stream').tweet
 
 // Ensure all endpoints from here on are called with a valid JWT
@@ -27,7 +27,7 @@ router.use((req, res, next) => {
 
 // Get all known tweets from the system (paginated)
 router.get('/', (req, res) => {
-  Tweet.paginate(
+  Ticket.paginate(
     {},
     {
       offset: parseInt(req.query.offset, 10) || 0,
@@ -39,7 +39,7 @@ router.get('/', (req, res) => {
         return res.status(500).json({ error: err })
       }
 
-      Tweet.hydrateTweetTickets(result.docs, req.twitterClient)
+      Ticket.hydrateTweetTickets(result.docs, req.twitterClient)
         .catch(console.error)
         .then(hydrated => {
           result.docs = hydrated || result.docs
@@ -55,7 +55,7 @@ router.post('/', (req, res) => {
     return res.status(403).json({ error: 'Invalid user role' })
   }
 
-  Tweet.findOne({ twid: req.body.twid || req.body.id_str }, (err, tweet) => {
+  Ticket.findOne({ twid: req.body.twid || req.body.id_str }, (err, tweet) => {
     if (err) {
       return res.status(500).json({ error: err })
     }
@@ -72,21 +72,21 @@ router.post('/', (req, res) => {
           return res.status(500).json({ error: err })
         }
 
-        tweet = new Tweet(
+        const ticket = new Ticket(
           Object.assign({}, tweet, {
             twid: tweet.id_str,
             mozhelp_status: req.body.mozhelp_status || 'NEW'
           })
         )
 
-        tweet.save((err, tweet) => {
+        ticket.save((err, ticket) => {
           if (err) {
             return res.status(500).json({ error: err })
           }
 
-          res.status(201).json({ _id: tweet.id })
+          res.status(201).json({ _id: ticket.id })
 
-          stream && stream.emit('save', tweet)
+          stream && stream.emit('save', ticket)
 
           // Tweet.hydrateTweetTickets(tweet, req.twitterClient)
           //   .catch(console.warn)
@@ -98,8 +98,8 @@ router.post('/', (req, res) => {
 })
 
 // Get a specific known tweet
-router.get('/:tweetId', (req, res) => {
-  Tweet.findById(req.params.tweetId, (err, tweet) => {
+router.get('/:ticketId', (req, res) => {
+  Ticket.findById(req.params.ticketId, (err, tweet) => {
     if (err) {
       return res.status(500).json({ error: err })
     }
@@ -108,19 +108,19 @@ router.get('/:tweetId', (req, res) => {
       return res.status(404).json({ error: 'Not found' })
     }
 
-    Tweet.hydrateTweetTickets(tweet, req.twitterClient)
+    Ticket.hydrateTweetTickets(tweet, req.twitterClient)
       .catch(console.error)
       .then(hydrated => res.status(200).json(hydrated || tweet))
   })
 })
 
 // Update a specific known tweet
-router.patch('/:tweetId', (req, res) => {
+router.patch('/:ticketId', (req, res) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
   }
 
-  Tweet.findById(req.params.tweetId, (err, tweet) => {
+  Ticket.findById(req.params.ticketId, (err, tweet) => {
     if (err) {
       return res.status(500).json({ error: err })
     }
@@ -158,8 +158,8 @@ router.patch('/:tweetId', (req, res) => {
 })
 
 // Get notes on a specific known tweet
-router.get('/:tweetId/notes', (req, res) => {
-  Tweet.findById(req.params.tweetId, (err, tweet) => {
+router.get('/:ticketId/notes', (req, res) => {
+  Ticket.findById(req.params.ticketId, (err, tweet) => {
     if (err) {
       return res.status(500).json({ error: err })
     }
@@ -173,12 +173,12 @@ router.get('/:tweetId/notes', (req, res) => {
 })
 
 // Add note to a specific known tweet
-router.post('/:tweetId/notes', (req, res) => {
+router.post('/:ticketId/notes', (req, res) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
   }
 
-  Tweet.findById(req.params.tweetId, (err, tweet) => {
+  Ticket.findById(req.params.ticketId, (err, tweet) => {
     if (err) {
       return res.status(500).json({ error: err })
     }
@@ -187,7 +187,7 @@ router.post('/:tweetId/notes', (req, res) => {
       return res.status(404).json({ error: 'Not found' })
     }
 
-    const note = Tweet.Note(req.body)
+    const note = Ticket.Note(req.body)
     note.user = req.user._id
     tweet.mozhelp_notes.push(note)
 
@@ -198,7 +198,7 @@ router.post('/:tweetId/notes', (req, res) => {
 
       res.status(201).json({ _id: tweet.mozhelp_notes.pop().id })
 
-      Tweet.findById(req.params.tweetId, (err, tweet) => {
+      Ticket.findById(req.params.ticketId, (err, tweet) => {
         if (err) {
           console.error(err)
           return stream && stream.emit('error', err)
@@ -214,14 +214,14 @@ router.post('/:tweetId/notes', (req, res) => {
 })
 
 // Update a note on a specific known tweet
-router.put('/:tweetId/notes/:noteId', (req, res) => {
+router.put('/:ticketId/notes/:noteId', (req, res) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
   }
 
-  Tweet.findOne(
+  Ticket.findOne(
     {
-      _id: req.params.tweetId,
+      _id: req.params.ticketId,
       'mozhelp_notes._id': req.params.noteId
     },
     (err, tweet) => {
@@ -253,7 +253,7 @@ router.put('/:tweetId/notes/:noteId', (req, res) => {
 
         res.status(204).end()
 
-        Tweet.findById(req.params.tweetId, (err, tweet) => {
+        Ticket.findById(req.params.ticketId, (err, tweet) => {
           if (err) {
             console.error(err)
             return stream && stream.emit('error', err)
@@ -270,14 +270,14 @@ router.put('/:tweetId/notes/:noteId', (req, res) => {
 })
 
 // Delete a note from a specific known tweet
-router.delete('/:tweetId/notes/:noteId', (req, res) => {
+router.delete('/:ticketId/notes/:noteId', (req, res) => {
   if (req.user.role === 'spectator') {
     return res.status(403).json({ error: 'Invalid user role' })
   }
 
-  Tweet.findOne(
+  Ticket.findOne(
     {
-      _id: req.params.tweetId,
+      _id: req.params.ticketId,
       'mozhelp_notes._id': req.params.noteId
     },
     (err, tweet) => {
@@ -309,7 +309,7 @@ router.delete('/:tweetId/notes/:noteId', (req, res) => {
 
         res.status(204).end()
 
-        Tweet.findById(req.params.tweetId, (err, tweet) => {
+        Ticket.findById(req.params.ticketId, (err, tweet) => {
           if (err) {
             console.error(err)
             return stream && stream.emit('error', err)

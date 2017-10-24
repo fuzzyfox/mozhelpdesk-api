@@ -42,6 +42,9 @@ const http = require('http').Server(app)
 // Configure stream/socketio
 require('./stream').init(http)
 
+// Configure slack bots
+require('./streams/slack')
+
 // Cache some data on the app singleton
 app.set('host', process.env.HOST || '0.0.0.0')
 app.set('port', process.env.PORT || 3000)
@@ -78,6 +81,7 @@ app.use('/', require('./routes/index'))
 app.use('/users', require('./routes/users'))
 app.use('/twitter', require('./routes/twitter'))
 app.use('/tickets', require('./routes/tickets'))
+app.use('/slack', require('./routes/slack'))
 app.use('/stream', require('./routes/stream'))
 
 // Error handling

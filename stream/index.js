@@ -21,7 +21,7 @@ let twitterStreamReconnectTimeout = null
 module.exports = {
   io: null,
   tweet: null,
-  note: null,
+  slack: null,
   get twitterStream() {
     return twitterStream
   },
@@ -33,7 +33,7 @@ module.exports = {
       path: '/socket.io'
     })
     this.tweet = this.io.of('/tweet')
-    this.note = this.io.of('/note')
+    this.slack = this.io.of('/slack')
   },
   startTwitterStream(config) {
     this.stopTwitterStream()
