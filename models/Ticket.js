@@ -45,6 +45,18 @@ const noteSchema = new mongoose.Schema(
  * @type {mongoose.Schema}
  */
 const ticketSchema = new mongoose.Schema({
+  // tweet: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'Tweet',
+  //   autopopulate: true
+  // },
+  //
+  // slack: {
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'SlackThread',
+  //   autopopulate: true
+  // },
+
   /**
    * Twitter's ID for the tweet (id_str)
    * @type {string}
@@ -126,6 +138,45 @@ const dumbyTicketObj = () => ({
 
 ticketSchema.plugin(mongooseAutopopulate)
 ticketSchema.plugin(mongoosePaginate)
+
+ticketSchema.methods.findReplies = function(callback = function() {}) {
+  return new Promise((resolve, reject) => {
+    this.model('Ticket').find({}, (err, tickets) => {
+      if (err) {
+        return reject(err)
+      }
+
+      console.log(tickets)
+
+      tickets = tickets.reduce(
+        (replies, ticket) => {
+          console.log(replies.twid)
+
+          if (!ticket.in_reply_to_status_id_str) {
+            return replies
+          }
+
+          const inReplyTo = replies.find(reply => {
+            return reply.twid === ticket.in_reply_to_status_id_str
+          })
+
+          if (!inReplyTo) {
+            return replies
+          }
+
+          replies.push(ticket)
+          return replies
+        },
+        [this.toObject()]
+      )
+
+      tickets.shift()
+
+      callback(null, tickets)
+      resolve(tickets)
+    })
+  })
+}
 
 /**
  * Merge tweet(s) from twitter api/stream with known/tracked tickets in the db

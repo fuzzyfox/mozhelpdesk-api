@@ -110,6 +110,27 @@ router.get('/:ticketId', (req, res) => {
   })
 })
 
+// Get a specific known tweet's replies
+router.get('/:ticketId/replies', (req, res) => {
+  Ticket.findById(req.params.ticketId, (err, tweet) => {
+    if (err) {
+      return res.status(500).json({ error: err })
+    }
+
+    if (!tweet) {
+      return res.status(404).json({ error: 'Not found' })
+    }
+
+    tweet
+      .findReplies()
+      .then(replies => res.status(200).json(replies))
+      .catch(err => {
+        console.error(err)
+        return res.status(500).json({ error: err.toString() })
+      })
+  })
+})
+
 // Update a specific known tweet
 router.patch('/:ticketId', (req, res) => {
   if (req.user.role === 'spectator') {

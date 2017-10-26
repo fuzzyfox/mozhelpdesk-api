@@ -93,6 +93,7 @@ const startTwitterStream = config => {
               }
 
               const ticket = new Ticket(event)
+              ticket.twid = event.id_str
 
               if (event.retweeted_status) {
                 ticket.mozhelp_status = 'NO_ACTION_REQUIRED'
